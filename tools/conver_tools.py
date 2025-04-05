@@ -25,12 +25,76 @@ def param_matrix_to_pylist() -> None:
     final_file = f"[\n{''.join(final_matrix)}]"
     print(final_file)
 
+def load_file(file_path: str) -> list[str]:
+    
+    with open(file_path, "r", encoding="utf-8") as file:
+        lines = file.readlines()
+        file.close()
+        
+    return lines
+
+def save_file(file_path: str, data: str) -> None:
+    
+    with open(file_path, mode="w", encoding="utf-8") as file:
+        file.writelines(data)
+        file.close()
+        
+
+def python_format_matrix(data_matrix: list[list[str]]) -> str:
+    """
+    Converts the matrix of individual elements to format that can be copy and
+    pasted into python
+    """ 
+    # list of formatted strings with opening bracket
+    final_list: list[str] = ["[\n"]
+    
+    for row in data_matrix:
+        tmp_row: list[str] = ["\t["]
+        # for element in row:
+        for element in row:
+            tmp_element = element.strip()
+            # only write non-empty elements
+            tmp_row.extend(f"{tmp_element},")
+            
+        tmp_row[-1] = "],\n"
+        final_list.append("".join(tmp_row))
+    
+    final_list.append("]")    
+    
+    return "".join(final_list)
+
 def matrix_to_lists() -> None:
     matrix_file = "./tools/tmp/matrix_in.txt"
+
+    matrix_from_file = load_file(matrix_file)
+
+    # Delete the header with the indexes for columns
+    matrix_from_file.pop(0)
+    
+    # clean lines a bit
+    for i in range(len(matrix_from_file)):
+        matrix_from_file[i] = matrix_from_file[i].strip()
+    
+    # matrix of individual elements
+    matrix: list[list[str]] = []
+    
+    for element in matrix_from_file:
+        tmp = element.split()
+        # Remove the row index
+        tmp.pop(0)
+        
+        matrix.append(tmp)
+    
+    final_lines = python_format_matrix(matrix)
+    
+    save_file("./tools/tmp/matrix_out.txt", final_lines)
+        
+       
 
 def main() -> None:
     pass
     # param_matrix_to_pylist()
+    matrix_to_lists()
 
 if __name__ == "__main__":
     main()
