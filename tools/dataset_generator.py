@@ -68,49 +68,74 @@ def service_location_grid_generation(spacing: int,
     return service_locations
 
 def customer_demand_generation(n_locations: int,
-                               demand_range: tuple[int | float, int | float] | list [int | float]) -> NDArray[Any]:
+                               center: int | float,
+                               deviation: int | float) -> NDArray[Any]:
     '''
-    Function generates random demand value for "n_location" customers in range specified by the "demand_range" parameter
+    Function generates random demand value for "n_location" customers using normal distribution specified by the
+    "center" (mean) and "deviation" (standard deviation) parameters
     '''
     
-    # TODO:
+    rng = np.random.default_rng()
     
-    return np.array([0, 0])
+    demand = np.round(rng.normal(loc=center, scale=deviation, size=n_locations))
+    
+    return demand
 
 def service_capacity_generation(n_locations: int,
-                                demand_range: tuple[int | float, int | float] | list [int | float]) -> NDArray[Any]:
+                                center: int | float,
+                                deviation: int | float) -> NDArray[Any]:
     '''
-    Function generates random capacity for each "n_locations" service centers in range specified by the "service_range"
+    Function generates random capacity for each "n_locations" service centers using normal distribution specified by the
+    "center" (mean) and "deviation" (standard deviation) parameters
     '''
         
-    # TODO:
+    rng = np.random.default_rng()
     
-    return np.array([0, 0])
+    capacity = np.round(rng.normal(loc=center, scale=deviation, size=n_locations))
+    
+    return capacity
 
 def data_save(data: pd.DataFrame,
-              type: Literal[".csv", ".pkl"],
+              file_type: Literal[".csv", ".pkl"],
               location: str | pathlib.Path) -> None:
     '''
     Function saves the data into either .csv or .pkl (specified by the "type" parameter) onto a location 
     specified by the "location" and "file name" parameter.
     '''
     
-    # TODO:
+    match file_type:
+        case ".csv":
+            data.to_csv(location, sep=";")
+        case ".pkl":
+            data.to_pickle(location)
     
 def create_location_dataframe(locations: NDArray[Any],
                               capacity: NDArray[Any],
+                              weight: NDArray[Any] | list[int] | list[float] | None = None,
                               max_range: int | float | None = None) -> pd.DataFrame:
     '''
     Function merges the locations coordinates and capacity/demand values into one DataFrame with 3/4 columns\n
     **X**: x coordinate of the location\n
     **Y**: y coordinate of the location\n
     **Value**: Value of the demand/capacity of the location\n
+    **Weight**: Weight of the individual service centers\n
     **Range**: Value of the range of the service location caved only on row 0 and only for service location
     '''
     
-    # TODO:
+    names = ["x", "y", "value", "weight", "range"]
     
-    return pd.DataFrame()
+    final_frame = pd.DataFrame(locations, columns=names[:2])
+    
+    final_frame[names[2]] = capacity
+    
+    # Append weights if provided, else use weight of 1
+    if weight is not None:
+        final_frame[names[3]] = weight
+    
+    if max_range is not None:
+        final_frame[names[4]] = max_range
+    
+    return final_frame
 
 def generate_dataset() -> None:
     '''
@@ -130,10 +155,22 @@ if __name__ == "__main__":
     
     service_centers = service_location_grid_generation(spacing=spacing, x_range=x_range, y_range=y_range)
     customers = poisson_disc_random_samples(n_points=n, radius=r, x_range=x_range, y_range=y_range)
+    customers = np.round(customers)
+    
+    customer_demand = customer_demand_generation(len(customers), center=300, deviation=80)
+    service_capacity = service_capacity_generation(len(service_centers), center=500, deviation=90)
     
     print(f"{customers.shape = }")
     print(f"{service_centers.shape = }")
     
+    service_weight = [1] * len(service_centers)
+    service_frame = create_location_dataframe(locations=service_centers, capacity=service_capacity, weight=service_weight, max_range=max_range)
+    customer_frame = create_location_dataframe(locations=customers, capacity=customer_demand)
+    
+    # print(service_frame)
+    # print(customer_frame)
+    
+    # exit()
     initial_dataset_display(customers=customers,
                             services=service_centers,
                             max_range=max_range,
@@ -144,3 +181,6 @@ if __name__ == "__main__":
                             markers=(".", "+"),
                             title="Dataset generation boogaloo",
                             toggle_ranges=False)
+    
+    data_save(service_frame, file_type=".csv", location="./tools/tmp/service_test_1.csv")
+    data_save(customer_frame, file_type=".csv", location="./tools/tmp/customer_test_1.csv")
