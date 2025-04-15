@@ -160,7 +160,22 @@ def generate_dataset(n: int,
                      round_customers: int | None = None,
                      ) -> None:
     '''
-    This function is the main script for generation of the dataset and it's export
+    This function is the main script for generation of the dataset and it's export\n
+    Parameters:\n
+    - **n**: Number of customers to create \n
+    - **max_range**: Max range of the service centers coverage\n
+    - **spacing**: Spacing of the service location grid\n
+    - **disc_radius**: Radius parameter for the Poisson Disc algorithm\n
+    - **x_range**: (min, max) x range of the space where customers and service locations will be generated\n
+    - **y_range**: (min, max) y range of the space where customers and service locations will be generated\n
+    - **normal_center**: (customer, service) Center (mean) for normal random generation of customer demand and service capacity using normal distribution\n
+    - **standard_deviation**: (customer, service) Standard deviation for normal random generation of customer demand and service capacity using normal distribution\n
+    - **dataset_name**: name (without extension) used in the creation of the saved files and displayed in the plot\n
+    - **file_extension**: (".csv", ".pkl") save file extension\n
+    - **save_location**: (only the directory) save location for the exported files\n
+    - **visual_config**: (VisualConfig class) setting for the matplotlib visualisation\n
+    - **weight**: Vector of weights for the service locations, if None is provided weights of 1 will be used\n
+    - **round_customers**: Rounds the customer location to the given number of decimal places, if None is provided there will be no rounding\n
     '''
     
     service_centers = service_location_grid_generation(spacing=spacing, x_range=x_range, y_range=y_range)
@@ -178,7 +193,7 @@ def generate_dataset(n: int,
     if weight is None:
         service_weight = [1] * len(service_centers)
     else:
-        service_weight = weight    
+        service_weight = weight[:len(service_centers) + 1]    
         
     service_frame = create_location_dataframe(locations=service_centers, capacity=service_capacity, weight=service_weight, max_range=max_range)
     customer_frame = create_location_dataframe(locations=customers, capacity=customer_demand)
