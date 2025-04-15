@@ -14,14 +14,21 @@ from scipy.stats import qmc
 from numpy.typing import NDArray
 from datetime import datetime
 import pathlib
+from dataclasses import dataclass
 
 from dataset_visualisation import initial_dataset_display
 
+@dataclass
+class VisualConfig:
+    colors: tuple[str, str] = ("blue", "red")
+    alphas: tuple[int | float, int | float] = (0.7, 0.5)
+    markers: tuple[str, str] = (".", "+")
+    
 
 def poisson_disc_random_samples(n_points: int,
                                 radius: int | float,
-                                x_range: tuple[int, int] | list[int],
-                                y_range: tuple[int, int] | list[int],) -> NDArray[np.float64]:
+                                x_range: tuple[int, int] | tuple[float, float] | list[int | float],
+                                y_range: tuple[int, int] | tuple[float, float] | list[int | float],) -> NDArray[np.float64]:
     '''
     Function fill space given by "x_range" and "y_range" parameters using Poisson disc algorithm with "radius" 
     parameter and then randomly selects "n_points" from this space to use as a dataset
@@ -46,9 +53,9 @@ def poisson_disc_random_samples(n_points: int,
     
     return samples_selected    
     
-def service_location_grid_generation(spacing: int,
-                                     x_range: tuple[int, int] | list[int],
-                                     y_range: tuple[int, int] | list[int],) -> NDArray[Any]:
+def service_location_grid_generation(spacing: int | float,
+                                     x_range: tuple[int, int] | tuple[float, float] | list[int | float],
+                                     y_range: tuple[int, int] | tuple[float, float] | list[int | float],) -> NDArray[Any]:
     '''
     Creates grid of service centres with spaced from each other by the given "spacing" parameter.\n
     Dimensions of the grid specified by the "x_range" and "y_range" parameters
@@ -137,33 +144,42 @@ def create_location_dataframe(locations: NDArray[Any],
     
     return final_frame
 
-def generate_dataset() -> None:
+def generate_dataset(n: int,
+                     max_range: int | float,
+                     spacing: int | float,
+                     disc_radius: int | float,
+                     x_range: tuple[int, int] | tuple[float, float] | list[int | float],
+                     y_range: tuple[int, int] | tuple[float, float] | list[int | float],
+                     normal_center: tuple[float | int, float | int],
+                     standard_deviation: tuple[float | int, float | int],
+                     dataset_name: str,
+                     file_extension: Literal[".csv"] | Literal[".pkl"],
+                     save_location: str | pathlib.Path,
+                     visual_config: VisualConfig,
+                     weight: list[int | float] | NDArray[Any] | None = None,
+                     round_customers: int | None = None,
+                     ) -> None:
     '''
     This function is the main script for generation of the dataset and it's export
     '''
     
-
-if __name__ == "__main__":
-    pass
-
-    n = 250
-    x_range = (0, 100)
-    y_range = (0, 100)
-    r = 3
-    spacing = 20
-    max_range = 30
-    
     service_centers = service_location_grid_generation(spacing=spacing, x_range=x_range, y_range=y_range)
-    customers = poisson_disc_random_samples(n_points=n, radius=r, x_range=x_range, y_range=y_range)
-    customers = np.round(customers)
+    customers = poisson_disc_random_samples(n_points=n, radius=disc_radius, x_range=x_range, y_range=y_range)
     
-    customer_demand = customer_demand_generation(len(customers), center=300, deviation=80)
-    service_capacity = service_capacity_generation(len(service_centers), center=500, deviation=90)
+    if round_customers is not None:
+        customers = np.round(customers, decimals=round_customers)
     
-    print(f"{customers.shape = }")
-    print(f"{service_centers.shape = }")
+    customer_demand = customer_demand_generation(len(customers), center=normal_center[0], deviation=standard_deviation[0])
+    service_capacity = service_capacity_generation(len(service_centers), center=normal_center[1], deviation=standard_deviation[1])
     
-    service_weight = [1] * len(service_centers)
+    # print(f"{customers.shape = }")
+    # print(f"{service_centers.shape = }")
+    
+    if weight is None:
+        service_weight = [1] * len(service_centers)
+    else:
+        service_weight = weight    
+        
     service_frame = create_location_dataframe(locations=service_centers, capacity=service_capacity, weight=service_weight, max_range=max_range)
     customer_frame = create_location_dataframe(locations=customers, capacity=customer_demand)
     
@@ -171,16 +187,89 @@ if __name__ == "__main__":
     # print(customer_frame)
     
     # exit()
-    initial_dataset_display(customers=customers,
+    fig_no_range, _ = initial_dataset_display(customers=customers,
                             services=service_centers,
                             max_range=max_range,
                             x_range=x_range,
                             y_range=y_range,
-                            colors=("blue", "red"),
-                            alphas=(0.7, 0.5),
-                            markers=(".", "+"),
-                            title="Dataset generation boogaloo",
+                            colors=visual_config.colors,
+                            alphas=visual_config.alphas,
+                            markers=visual_config.markers,
+                            title=dataset_name,
                             toggle_ranges=False)
+    fig_range, _ = initial_dataset_display(customers=customers,
+                            services=service_centers,
+                            max_range=max_range,
+                            x_range=x_range,
+                            y_range=y_range,
+                            colors=visual_config.colors,
+                            alphas=visual_config.alphas,
+                            markers=visual_config.markers,
+                            title=dataset_name,
+                            toggle_ranges=True)
     
-    data_save(service_frame, file_type=".csv", location="./tools/tmp/service_test_1.csv")
-    data_save(customer_frame, file_type=".csv", location="./tools/tmp/customer_test_1.csv")
+    full_location = f"{save_location}/{dataset_name}"
+    data_save(service_frame, file_type=file_extension, location=f"{full_location}_service{file_extension}")
+    data_save(customer_frame, file_type=file_extension, location=f"{full_location}_customers{file_extension}")
+    fig_no_range.savefig(f"{save_location}/{dataset_name}_no_range.png")
+    fig_range.savefig(f"{save_location}/{dataset_name}_range.png")
+        
+
+if __name__ == "__main__":
+    pass
+
+    visualSettings = VisualConfig()
+    
+    generate_dataset(n=250,
+                     max_range=30,
+                     spacing=20,
+                     disc_radius=3,
+                     x_range=(0, 100),
+                     y_range=(0, 100),
+                     normal_center=(300, 500),
+                     standard_deviation=(80, 90),
+                     dataset_name="test_dataset_1",
+                     file_extension=".csv",
+                     save_location="./tools/tmp",
+                     visual_config=visualSettings,
+                     weight=None,
+                     round_customers=0)
+    
+    # n = 250
+    # x_range = (0, 100)
+    # y_range = (0, 100)
+    # r = 3
+    # spacing = 20
+    # max_range = 30
+    
+    # service_centers = service_location_grid_generation(spacing=spacing, x_range=x_range, y_range=y_range)
+    # customers = poisson_disc_random_samples(n_points=n, radius=r, x_range=x_range, y_range=y_range)
+    # customers = np.round(customers)
+    
+    # customer_demand = customer_demand_generation(len(customers), center=300, deviation=80)
+    # service_capacity = service_capacity_generation(len(service_centers), center=500, deviation=90)
+    
+    # print(f"{customers.shape = }")
+    # print(f"{service_centers.shape = }")
+    
+    # service_weight = [1] * len(service_centers)
+    # service_frame = create_location_dataframe(locations=service_centers, capacity=service_capacity, weight=service_weight, max_range=max_range)
+    # customer_frame = create_location_dataframe(locations=customers, capacity=customer_demand)
+    
+    # # print(service_frame)
+    # # print(customer_frame)
+    
+    # # exit()
+    # initial_dataset_display(customers=customers,
+    #                         services=service_centers,
+    #                         max_range=max_range,
+    #                         x_range=x_range,
+    #                         y_range=y_range,
+    #                         colors=("blue", "red"),
+    #                         alphas=(0.7, 0.5),
+    #                         markers=(".", "+"),
+    #                         title="Dataset generation boogaloo",
+    #                         toggle_ranges=False)
+    
+    # data_save(service_frame, file_type=".csv", location="./tools/tmp/service_test_1.csv")
+    # data_save(customer_frame, file_type=".csv", location="./tools/tmp/customer_test_1.csv")
