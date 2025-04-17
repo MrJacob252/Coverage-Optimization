@@ -3,6 +3,7 @@ import pandas as pd
 from numpy.typing import NDArray, ArrayLike
 from typing import Literal, Any
 import pathlib
+from scipy.spatial.distance import cdist
 
 def load_customers(path: str | pathlib.Path, 
                    file_type: Literal[".csv"] | Literal[".pkl"], 
@@ -71,6 +72,21 @@ def load_service(path: str | pathlib.Path,
     service_weight = np.column_stack((index_column, weight))
     
     return (service_locations, service_capacity, service_weight, max_range)
+
+def create_distance_matrix(service: NDArray[Any], 
+                           customers: NDArray[Any],
+                           decimals: int | None = None) -> NDArray[Any]:
+    
+    service_coords = service[:, 1:]
+    customer_coords = customers[:, 1:]
+    
+    # Compute the distance matrix with the final shape of (customers, services)
+    distance_matrix = cdist(customer_coords, service_coords)
+
+    if decimals is not None:
+        distance_matrix = np.round(distance_matrix, decimals=decimals)
+
+    return distance_matrix
 
 if __name__ == "__main__":
     pass
