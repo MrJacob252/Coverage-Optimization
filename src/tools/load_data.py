@@ -76,6 +76,11 @@ def load_service(path: str | pathlib.Path,
 def create_distance_matrix(service: NDArray[Any], 
                            customers: NDArray[Any],
                            decimals: int | None = None) -> NDArray[Any]:
+    '''
+    This function computes distance matrix from given service location array and customers 
+    location array. If provided it will round the resulting distances to the given number of
+    decimal places
+    '''
     
     service_coords = service[:, 1:]
     customer_coords = customers[:, 1:]
