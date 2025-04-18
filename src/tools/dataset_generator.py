@@ -235,56 +235,17 @@ if __name__ == "__main__":
 
     visualSettings = VisualConfig()
     
-    generate_dataset(n=250,
+    generate_dataset(n=150,
                      max_range=30,
                      spacing=20,
-                     disc_radius=3,
+                     disc_radius=5,
                      x_range=(0, 100),
                      y_range=(0, 100),
-                     normal_center=(300, 500),
-                     standard_deviation=(80, 90),
+                     normal_center=(300, 3500),
+                     standard_deviation=(80, 100),
                      dataset_name="test_dataset_1",
                      file_extension=".csv",
-                     save_location="./tools/tmp",
+                     save_location="./src/tools/tmp",
                      visual_config=visualSettings,
                      weight=None,
                      round_customers=0)
-    
-    # n = 250
-    # x_range = (0, 100)
-    # y_range = (0, 100)
-    # r = 3
-    # spacing = 20
-    # max_range = 30
-    
-    # service_centers = service_location_grid_generation(spacing=spacing, x_range=x_range, y_range=y_range)
-    # customers = poisson_disc_random_samples(n_points=n, radius=r, x_range=x_range, y_range=y_range)
-    # customers = np.round(customers)
-    
-    # customer_demand = customer_demand_generation(len(customers), center=300, deviation=80)
-    # service_capacity = service_capacity_generation(len(service_centers), center=500, deviation=90)
-    
-    # print(f"{customers.shape = }")
-    # print(f"{service_centers.shape = }")
-    
-    # service_weight = [1] * len(service_centers)
-    # service_frame = create_location_dataframe(locations=service_centers, capacity=service_capacity, weight=service_weight, max_range=max_range)
-    # customer_frame = create_location_dataframe(locations=customers, capacity=customer_demand)
-    
-    # # print(service_frame)
-    # # print(customer_frame)
-    
-    # # exit()
-    # initial_dataset_display(customers=customers,
-    #                         services=service_centers,
-    #                         max_range=max_range,
-    #                         x_range=x_range,
-    #                         y_range=y_range,
-    #                         colors=("blue", "red"),
-    #                         alphas=(0.7, 0.5),
-    #                         markers=(".", "+"),
-    #                         title="Dataset generation boogaloo",
-    #                         toggle_ranges=False)
-    
-    # data_save(service_frame, file_type=".csv", location="./tools/tmp/service_test_1.csv")
-    # data_save(customer_frame, file_type=".csv", location="./tools/tmp/customer_test_1.csv")

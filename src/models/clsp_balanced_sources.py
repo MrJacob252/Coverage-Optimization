@@ -9,16 +9,28 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import io, sys
+from numpy.typing import NDArray
+from typing import Any
 
-def clsp_bs():
+import src.tools.load_data as load
+import src.tools.dataset_visualisation as vis
 
-    # dimension of I
-    dim_i = 100
+def clsp_bs(customer_locations: NDArray[Any],
+            customer_demand: NDArray[Any],
+            service_locations: NDArray[Any],
+            service_capacity: NDArray[Any],
+            service_weight: NDArray[Any],
+            max_range: int | float,
+            distance_matrix: NDArray[Any],
+            r_parameter: float):
+    # TODO: Add docstring
+    
+    # Define dimension of I and J
+    dim_i = len(customer_locations)
+    dim_j = len(service_locations)
     i_space = np.linspace(1, dim_i, dim_i, dtype=int)
-    # dimension of j
-    dim_j = 30
-    j_space = np.linspace(1, dim_j, num=dim_j, dtype=int)
-
+    j_space = np.linspace(1, dim_j, dim_j, dtype=int)
+    
 
     m = Container()
 
@@ -45,34 +57,45 @@ def clsp_bs():
         name="W",
         domain=J,
         description="weights of the centres",
-        records=sd.weights_of_centres
+        # records=service_weight
     )
+    for i in service_weight:
+        W[str(i[0])] = float(i[1])
 
     C = Parameter(
         m,
         name="C",
         domain=J,
         description="capacity of the centres",
-        records=sd.capacity_of_centres
+        # records=service_capacity
     )
+    for i in service_capacity:
+        C[str(int(i[0]))] = float(i[1])
 
     B = Parameter(
         m,
         name="B",
         domain=I,
         description="number of customers",
-        records=sd.number_of_customers
+        # records=customer_demand
     )
+    for i in customer_demand:
+        B[str(int(i[0]))] = float(i[1])
 
     # SCALAR
 
-    D_MAX = 35
-    # D_MAX = 15
-    # D_MAX = 100
-    r = 0.8
+    # D_MAX = 35
+    # # D_MAX = 15
+    # # D_MAX = 100
+    # r = 0.8
     
-    M = len(I)
-    N = len(J)
+    D_MAX = max_range
+    r = r_parameter
+    M = dim_i
+    N = dim_j
+    
+    # M = len(I)
+    # N = len(J)
 
     # TABLE
 
@@ -89,13 +112,10 @@ def clsp_bs():
             # A[str(row), str(col)] = sd.distance_matrix[i][j]
             
             # Directly convert the distance matrix data to binary reachability matrix
-            A[str(row), str(col)] = 1 if sd.distance_matrix[i][j] <= D_MAX else 0
+            A[str(row), str(col)] = 1 if distance_matrix[i][j] <= D_MAX else 0
 
-    print(A.records)
+    # print(A.records)
     # print(A["1", "0"])
-
-    print(sd.distance_matrix[0][0] <= D_MAX)
-    print(sd.distance_matrix[1][0] <= D_MAX)
 
     # VARIABLES
     
@@ -181,6 +201,8 @@ def clsp_bs():
         objective=XS
     )
     
+    # TODO: Do something with the output section
+    
     output = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
     
     solve_info = model.solve(output=output)
@@ -195,8 +217,19 @@ def clsp_bs():
     
     # print(Y_data)
     
-    fig = px.density_heatmap(P_data, x="J", y="I",z="value", text_auto=True,)
-    fig.show()
+    # fig = px.density_heatmap(P_data, x="J", y="I",z="value", text_auto=True,)
+    # fig.show()
+        
+    # P_data.to_pickle(".test/data/P_data.pkl") 
+    # X_data.to_pickle(".test/data/X_data.pkl")
+    P_data.to_csv("./src/tools/tmp/results/P_data.csv", sep=";")
+    X_data.to_csv("./src/tools/tmp/results/X_data.csv", sep=";")
+
+if __name__ == "__main__":
     
-    P_data.to_pickle(".test/data/P_data.pkl")
-    X_data.to_pickle(".test/data/X_data.pkl")
+    c_loc, c_dem = load.load_customers("./src/tools/tmp/test_dataset_1_customers.csv", ".csv")
+    s_loc, s_cap, s_wei, max_range = load.load_service("./src/tools/tmp/test_dataset_1_service.csv", ".csv")
+    
+    distance_matrix = load.create_distance_matrix(s_loc, c_loc, decimals=0)
+    
+    clsp_bs(c_loc, c_dem, s_loc, s_cap, s_wei, max_range, distance_matrix, 0.8)
