@@ -175,6 +175,11 @@ def plot_the_results(colored_results: pd.DataFrame,
     Plots the selected and colored service centers and plots customers as tiny 
     pie charts to show which service centers covers them 
     '''
+    # TODO: 
+    # - [ ] Cross size parameter
+    # - [ ] Customer size parameter
+    # - [ ] (maybe some visualisation config struct again)
+    # - [ ] Service ranges toggle
     
     fig, ax = plt.subplots(nrows=1, ncols=1, figsize=(20, 20))
     
