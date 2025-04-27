@@ -16,7 +16,7 @@ from datetime import datetime
 import pathlib
 from dataclasses import dataclass
 
-from dataset_visualisation import initial_dataset_display
+from src.tools.dataset_visualisation import initial_dataset_display
 
 @dataclass
 class VisualConfig:
@@ -158,7 +158,7 @@ def generate_dataset(n: int,
                      visual_config: VisualConfig,
                      weight: list[int | float] | NDArray[Any] | None = None,
                      round_customers: int | None = None,
-                     ) -> None:
+                     )  -> tuple[pathlib.Path, pathlib.Path]:
     '''
     This function is the main script for generation of the dataset and it's export\n
     Parameters:\n
@@ -176,6 +176,8 @@ def generate_dataset(n: int,
     - **visual_config**: (VisualConfig class) setting for the matplotlib visualisation\n
     - **weight**: Vector of weights for the service locations, if None is provided weights of 1 will be used\n
     - **round_customers**: Rounds the customer location to the given number of decimal places, if None is provided there will be no rounding\n
+    ___
+    - **returns:** Service dataset path, customer dataset path
     '''
     
     service_centers = service_location_grid_generation(spacing=spacing, x_range=x_range, y_range=y_range)
@@ -223,11 +225,17 @@ def generate_dataset(n: int,
                             title=dataset_name,
                             toggle_ranges=True)
     
+    
     full_location = f"{save_location}/{dataset_name}"
-    data_save(service_frame, file_type=file_extension, location=f"{full_location}_service{file_extension}")
-    data_save(customer_frame, file_type=file_extension, location=f"{full_location}_customers{file_extension}")
+    service_path = f"{full_location}_service{file_extension}"
+    customer_path = f"{full_location}_customers{file_extension}"
+    
+    data_save(service_frame, file_type=file_extension, location=service_path)
+    data_save(customer_frame, file_type=file_extension, location=customer_path)
     fig_no_range.savefig(f"{save_location}/{dataset_name}_no_range.png")
     fig_range.savefig(f"{save_location}/{dataset_name}_range.png")
+    
+    return (pathlib.Path(service_path), pathlib.Path(customer_path))
         
 
 if __name__ == "__main__":

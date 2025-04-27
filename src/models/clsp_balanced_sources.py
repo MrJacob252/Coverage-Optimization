@@ -11,6 +11,7 @@ import plotly.express as px
 import io, sys
 from numpy.typing import NDArray
 from typing import Any
+import pathlib
 
 import src.tools.load_data as load
 import src.tools.dataset_visualisation as vis
@@ -22,8 +23,12 @@ def clsp_bs(customer_locations: NDArray[Any],
             service_weight: NDArray[Any],
             max_range: int | float,
             distance_matrix: NDArray[Any],
-            r_parameter: float):
-    # TODO: Add docstring
+            r_parameter: float,
+            save_path: pathlib.Path | str = "")  -> tuple[pd.DataFrame, pd.DataFrame, pathlib.Path]:
+    '''
+    Solve given problem using CLSP with balanced sources
+    Returns (P_data, X_data)
+    '''
     
     # Define dimension of I and J
     dim_i = len(customer_locations)
@@ -203,9 +208,13 @@ def clsp_bs(customer_locations: NDArray[Any],
     
     # TODO: Do something with the output section
     
-    output = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
-    
-    solve_info = model.solve(output=output)
+    # output = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
+    # solve_info = model.solve(output=output)
+    output_file_path = pathlib.Path(save_path, f"gamspy.out")
+    with output_file_path.open("w+", encoding="utf-8") as output_file:
+        model.solve(output=output_file)
+        output_file.flush()
+        output_file.seek(0)
     
     # Objective value
     print("==============================")
@@ -222,8 +231,10 @@ def clsp_bs(customer_locations: NDArray[Any],
         
     # P_data.to_pickle(".test/data/P_data.pkl") 
     # X_data.to_pickle(".test/data/X_data.pkl")
-    P_data.to_csv("./src/tools/tmp/results/P_data.csv", sep=";")
-    X_data.to_csv("./src/tools/tmp/results/X_data.csv", sep=";")
+    # P_data.to_csv("./src/tools/tmp/results/P_data.csv", sep=";")
+    # X_data.to_csv("./src/tools/tmp/results/X_data.csv", sep=";")
+    
+    return (P_data, X_data, output_file_path)
 
 if __name__ == "__main__":
     

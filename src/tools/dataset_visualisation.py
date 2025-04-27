@@ -203,7 +203,7 @@ def plot_the_results(colored_results: pd.DataFrame,
     service_color = colored_results["color"].values
     service_ranges = colored_results["range"].values
     
-    # Place services TODO: increase cross size
+    # TODO: There is some bug with the colors that sometimes triggers (maybe more colors needed?)
     for i in range(len(service_x)):
         ax.scatter(service_x[i], service_y[i], color=color_list[service_color[i]], alpha=1, marker="+", s=100)
         
