@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 from src.tools import convert_tools, dataset_generator, load_data, dataset_visualisation
-from src.models import clsp_balanced_sources as clspbs
+from src.models import clscp_balanced_sources as clscp_bs
 
 # TODO:
 # - [ ] If no path to dataset is given -> create new with some default setting
@@ -85,7 +85,7 @@ def run_clsp_bs(service_path: pathlib.Path, customer_path: pathlib.Path, save_pa
     
     # P_data = how much is customer covered by what service
     # X_data = selected service centers -> sum(X_data) = number of selected centers
-    P_data, X_data, output = clspbs.clsp_bs(customer_locations,
+    P_data, X_data, output = clscp_bs.clscp_bs(customer_locations,
                                     customer_demand,
                                     service_location,
                                     service_capacity,

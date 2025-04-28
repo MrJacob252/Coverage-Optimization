@@ -4,7 +4,7 @@ Coverage Optimization with Balanced Capacitated Fragmentation
 https://doi.org/10.3390/math13050808
 '''
 
-from gamspy import Container, Set, Parameter, Variable, Variable, Equation, Sum, Model, Sense
+from gamspy import Container, Set, Parameter, Variable, Equation, Sum, Model, Sense
 import pandas as pd
 import numpy as np
 import plotly.express as px
@@ -16,7 +16,7 @@ import pathlib
 import src.tools.load_data as load
 import src.tools.dataset_visualisation as vis
 
-def clsp_bs(customer_locations: NDArray[Any],
+def clscp_bs(customer_locations: NDArray[Any],
             customer_demand: NDArray[Any],
             service_locations: NDArray[Any],
             service_capacity: NDArray[Any],
@@ -243,4 +243,4 @@ if __name__ == "__main__":
     
     distance_matrix = load.create_distance_matrix(s_loc, c_loc, decimals=0)
     
-    clsp_bs(c_loc, c_dem, s_loc, s_cap, s_wei, max_range, distance_matrix, 0.8)
+    clscp_bs(c_loc, c_dem, s_loc, s_cap, s_wei, max_range, distance_matrix, 0.8)
