@@ -26,7 +26,7 @@ def clscp_bs(customer_locations: NDArray[Any],
             r_parameter: float,
             save_path: pathlib.Path | str = "")  -> tuple[pd.DataFrame, pd.DataFrame, pathlib.Path]:
     '''
-    Solve given problem using CLSP with balanced sources
+    Solve given problem using CLSCP with balanced sources
     Returns (P_data, X_data)
     '''
     
