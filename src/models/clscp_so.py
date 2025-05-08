@@ -13,7 +13,6 @@ import pathlib
 import src.tools.load_data as load
 import src.tools.dataset_visualisation as vis
 
-# TODO: Add return type hint
 def clscp_so(customer_locations: NDArray[Any],
              customer_demand: NDArray[Any],
              service_locations: NDArray[Any],
