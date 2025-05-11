@@ -5,6 +5,7 @@ import pandas as pd
 
 from src.tools import convert_tools, dataset_generator, load_data, dataset_visualisation
 from src.models import clscp_balanced_sources as clscp_bs
+from src.models import clscp_so
 
 # TODO:
 # - [ ] If no path to dataset is given -> create new with some default setting
@@ -25,6 +26,7 @@ def init_arparse() -> None:
     # TODO: add arguments
     parser.add_argument("--dataset", "-d", type=str, required=False, default="", nargs=2, help="Enter path to a service dataset and customer dataset")
     parser.add_argument("--save", "-s", type=str, required=False, default="", help="Folder where to save the results of the run")
+    parser.add_argument("--model", "-m", type=str, required=True, choices=["clscp_bs", "clscp_so"], help="Select which model to run")
     
     global args
     args = parser.parse_args() 
@@ -37,7 +39,7 @@ def generate_new_dataset() -> tuple[pathlib.Path, pathlib.Path]:
     
     timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M")
     file_name = f"{timestamp}"
-    folder_path = pathlib.Path(f"./tmp/datasets/{timestamp}")
+    folder_path = pathlib.Path(f"./tmp/datasets/{timestamp}_{args.model}")
     
     # Create folder if it does not exist
     if not os.path.exists(folder_path):
@@ -100,12 +102,34 @@ def run_clsp_bs(service_path: pathlib.Path, customer_path: pathlib.Path, save_pa
     
     return (P_data, X_data)
 
+def run_clscp_so(service_path: pathlib.Path, customer_path: pathlib.Path, save_path: pathlib.Path) -> tuple[pd.DataFrame, pd.DataFrame]:
+    
+    service_location, service_capacity, _, max_range = load_data.load_service(service_path, ".csv")
+    customer_location, customer_demand = load_data.load_customers(customer_path, ".csv")
+    distance_matrix = load_data.create_distance_matrix(service_location, customer_location, decimals=0)
+
+    coverage_data, service_selection, output = clscp_so.clscp_so(customer_location,
+                                                                 customer_demand,
+                                                                 service_location,
+                                                                 service_capacity,
+                                                                 distance_matrix,
+                                                                 max_range,
+                                                                 save_path)
+    
+    # TODO: Process the coverage data because the output will be between 1 and 0, so either multiply or convert into the capacity values
+    
+    # Display the output
+    with output.open("r", encoding="utf-8") as output_file:
+        print(output_file.read())
+        
+    return (coverage_data, service_selection)
+
 def create_save_path() -> pathlib.Path:
     
     timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M")
     
     if args.save == "":
-        folder_path = pathlib.Path(f"./tmp/results/{timestamp}")
+        folder_path = pathlib.Path(f"./tmp/results/{timestamp}_{args.model}")
     else:
         folder_path = pathlib.Path(args.save)
 
@@ -184,7 +208,15 @@ def main():
         customer_dataset_path = pathlib.Path(args.dataset[1])
         
     save_path = create_save_path()
-    customer_coverage, selected_centers = run_clsp_bs(service_dataset_path, customer_dataset_path, save_path)
+    
+    match args.model:
+        case "clscp_bs":
+            customer_coverage, selected_centers = run_clsp_bs(service_dataset_path, customer_dataset_path, save_path)
+        case "clscp_so":
+            customer_coverage, selected_centers = run_clscp_so(service_dataset_path, customer_dataset_path, save_path)
+        case _:
+            customer_coverage, selected_centers = run_clsp_bs(service_dataset_path, customer_dataset_path, save_path)
+
     
     save_results(customer_coverage, selected_centers, save_path)
     
@@ -192,8 +224,6 @@ def main():
     
     show_result_scatter(service_dataset_path, customer_dataset_path, save_path)
 
-
-    # TODO: some bullshittery is happening, prints here will throw exception
     print("print")
     
     

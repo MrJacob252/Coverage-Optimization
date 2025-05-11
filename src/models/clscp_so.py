@@ -154,9 +154,38 @@ def clscp_so(customer_locations: NDArray[Any],
     capacities = pd.DataFrame(z_ij.toList(), columns=["I", "J", "value"])
     selected = pd.DataFrame(X.toList(), columns=["J", "selected"])
     
+    capacities = recalculate_capacities(capacities, customer_demand)
+    
     return (capacities, selected, output_file_path)
     
+def recalculate_capacities(calculated_capacities: pd.DataFrame, customer_demand: NDArray[Any]) -> pd.DataFrame:
+    '''Recalculate the resulting capacity fraction into integer demand values'''
     
+    final_capacities = calculated_capacities.copy()
+    
+    for customer_index, demand in customer_demand:
+        
+        # Filter the data to list only facilities that covet this customer
+        filtered_demand = calculated_capacities[calculated_capacities["I"] == str(int(customer_index))][calculated_capacities["value"] != 0.0]
+        num_services = len(filtered_demand)
+        
+        # Only one service is covering the customer
+        if num_services == 1:
+            dataframe_index = filtered_demand.index[0]
+            final_capacities.loc[dataframe_index, "value"] = demand
+            
+        else:
+            sum_demand = 0
+            for dataframe_index in filtered_demand.index:
+                if not dataframe_index == filtered_demand.index[-1]:
+                    covered = np.round(final_capacities.loc[dataframe_index, "value"] * demand)
+                    sum_demand += covered
+                    final_capacities.loc[dataframe_index, "value"] = covered
+                # Different behaviour for the last element to preserve the total value
+                else:
+                    final_capacities.loc[dataframe_index, "value"] = demand - sum_demand
+    
+    return final_capacities
     
 
 def __test():

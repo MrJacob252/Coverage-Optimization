@@ -243,7 +243,9 @@ if __name__ == "__main__":
 
     visualSettings = VisualConfig()
     
-    generate_dataset(n=150,
+    generate_dataset(# n=50,
+                     # n=150,
+                     n = 5,
                      max_range=30,
                      spacing=20,
                      disc_radius=5,
@@ -251,7 +253,7 @@ if __name__ == "__main__":
                      y_range=(0, 100),
                      normal_center=(300, 3500),
                      standard_deviation=(80, 100),
-                     dataset_name="test_dataset_1",
+                     dataset_name="test_dataset_3_smallest",
                      file_extension=".csv",
                      save_location="./src/tools/tmp",
                      visual_config=visualSettings,
